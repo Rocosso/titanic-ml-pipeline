@@ -1,3 +1,5 @@
+# This solution has to be deployed on a Lambda function from AWS.
+
 import json
 import boto3
 import os
