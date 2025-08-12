@@ -1,7 +1,7 @@
 ### Basic Documentation
 ###
 This is the structure of this project
-
+```plaintext
 titanic-ml-pipeline/
 ├── cdk/
 │   ├── app.py
@@ -24,6 +24,7 @@ titanic-ml-pipeline/
 │   ├── titanic_pipeline.py
 │   └── trigger_pipeline.py
 └── README.md
+```
 
 next you can find the process to deploy this project to production:
 
