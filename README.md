@@ -2,6 +2,7 @@
 ###
 This is the structure of this project
 ```plaintext
+%%{init: {'theme': 'neutral', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
 titanic-ml-pipeline/
 ├── cdk/
 │   ├── app.py
