@@ -1,7 +1,7 @@
 ### Basic Documentation
 ###
 This is the structure of this project
-
+```plaintext
 titanic-ml-pipeline/
 ├── cdk/
 │   ├── app.py
