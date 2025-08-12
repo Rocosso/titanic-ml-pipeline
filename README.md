@@ -140,8 +140,3 @@ sequenceDiagram
 
     Note right of Developer: Deployment Complete
 ```
-
-
-=======
-´´´
->>>>>>> Stashed changes
