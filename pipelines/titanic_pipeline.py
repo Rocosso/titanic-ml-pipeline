@@ -2,13 +2,14 @@ import os
 import boto3
 import sagemaker
 from sagemaker.workflow.pipeline import Pipeline
-from sagemaker.workflow.steps import ProcessingStep, TrainingStep
+from sagemaker.workflow.steps import ProcessingStep, TrainingStep, CreateModelStep, TransformStep
 from sagemaker.workflow.model_step import ModelStep
 from sagemaker.processing import ScriptProcessor
 from sagemaker.sklearn.estimator import SKLearn
 from sagemaker.model import Model
 from sagemaker.inputs import TrainingInput
 from sagemaker.workflow.parameters import ParameterString
+from sagemaker.inputs import CreateModelInput
 
 def get_pipeline(
     region,
@@ -122,3 +123,35 @@ def get_pipeline(
     )
 
     return pipeline
+
+def create_endpoint_step(model_registry, role):
+    # Paso 1: Crear modelo
+    model = Model(
+        image_uri=model_registry.image_uri,
+        model_data=model_registry.model_data,
+        role=role,
+        name="TitanicSurvivalModel"
+    )
+
+    create_model_step = CreateModelStep(
+        name="CreateTitanicModel",
+        model=model,
+        inputs=CreateModelInput(instance_type="ml.m5.large")
+    )
+
+    # Paso 2: Implementar endpoint
+    endpoint_config_name = "TitanicEndpointConfig"
+    endpoint_name = "TitanicSurvivalEndpoint"
+
+    deploy_step = ModelStep(
+        name="DeployTitanicModel",
+        step_args=model.deploy(
+            initial_instance_count=1,
+            instance_type="ml.m5.large",
+            endpoint_name=endpoint_name,
+            model_name="TitanicSurvivalModel",
+            wait=False
+        )
+    )
+
+    return create_model_step, deploy_step
