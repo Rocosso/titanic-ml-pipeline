@@ -26,7 +26,7 @@ titanic-ml-pipeline/
 └── README.md
 
 next you can find the process to deploy this project to production:
-
+´´´
 %%{init: {'theme': 'neutral', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
 flowchart TD
     A[Start Deployment] --> B[Prerequisites]
@@ -61,6 +61,7 @@ flowchart TD
         R[Model Training]
         S[Model Registry]
         T[SageMaker Endpoint]
+´´´
     end
     style A fill:#4CAF50,stroke:#388E3C
     style W fill:#4CAF50,stroke:#388E3C
