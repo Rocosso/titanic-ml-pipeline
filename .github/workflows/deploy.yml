@@ -1,0 +1,77 @@
+name: ML Pipeline Deployment
+
+on:
+  workflow_dispatch:  # Manual trigger
+  push:
+    branches: [ main ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REPO: titanic-inference
+  S3_BUCKET: titanic-data-${{ github.run_id }}
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # For AWS OIDC auth
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT }}:role/GitHubActionsRole
+
+      - name: Set up CDK
+        run: |
+          npm install -g aws-cdk
+          pip install -r cdk/requirements.txt
+
+      - name: Bootstrap CDK
+        run: cdk bootstrap aws://${{ secrets.AWS_ACCOUNT }}/${{ env.AWS_REGION }}
+
+      - name: Deploy Infrastructure
+        working-directory: ./cdk
+        run: cdk deploy --require-approval never
+
+      - name: Upload Data to S3
+        run: |
+          aws s3 cp ./data/titanic.csv s3://${{ env.S3_BUCKET }}/raw/
+
+      - name: Execute SageMaker Pipeline
+        run: |
+          python -m pip install boto3
+          python ./pipelines/trigger_pipeline.py \
+            --bucket ${{ env.S3_BUCKET }} \
+            --region ${{ env.AWS_REGION }}
+
+      - name: Build & Push Inference Image
+        working-directory: ./inference
+        run: |
+          aws ecr get-login-password | docker login --username AWS --password-stdin ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com
+          docker build -t ${{ env.ECR_REPO }} .
+          docker tag ${{ env.ECR_REPO }}:latest ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:latest
+          docker push ${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:latest
+
+      - name: Deploy Endpoint
+        run: |
+          aws sagemaker create-model \
+            --model-name TitanicModel \
+            --primary-container Image=${{ secrets.AWS_ACCOUNT }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_REPO }}:latest
+
+          aws sagemaker create-endpoint-config \
+            --endpoint-config-name TitanicConfig \
+            --production-variants VariantName=AllTraffic,ModelName=TitanicModel,InitialInstanceCount=1,InstanceType=ml.m5.large
+
+          aws sagemaker create-endpoint \
+            --endpoint-name TitanicEndpoint \
+            --endpoint-config-name TitanicConfig
+
+      - name: Test Endpoint
+        run: |
+          python ./tests/test_endpoint.py

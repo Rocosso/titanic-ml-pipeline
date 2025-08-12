@@ -38,10 +38,14 @@ titanic-ml-pipeline/
 ```
 
 next you can find the process to deploy this project to production:
+<<<<<<< Updated upstream
 
 
 ## 📁 Flowchart process
 ```mermaid
+=======
+´´´
+>>>>>>> Stashed changes
 %%{init: {'theme': 'neutral', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
 flowchart TD
     A[Start Deployment] --> B[Prerequisites]
@@ -81,6 +85,7 @@ flowchart TD
     style W fill:#4CAF50,stroke:#388E3C
     style X fill:#F44336,stroke:#D32F2F
     style AWS_Services fill:#E3F2FD,stroke:#64B5F6
+<<<<<<< Updated upstream
 ```
 
 
@@ -141,3 +146,6 @@ sequenceDiagram
 ```
 
 
+=======
+´´´
+>>>>>>> Stashed changes
