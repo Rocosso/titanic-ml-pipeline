@@ -154,4 +154,21 @@ def create_endpoint_step(model_registry, role):
         )
     )
 
+    # Paso 3: Auto escalado
+    auto_scaling = sagemaker.CfnScalingPolicy(
+        self, "EndpointScaling",
+        policy_name="TitanicEndpointScaling",
+        service_namespace="sagemaker",
+        scalable_dimension="sagemaker:variant:DesiredInstanceCount",
+        policy_type="TargetTrackingScaling",
+        target_tracking_scaling_policy_configuration={
+            "target_value": 70.0,  # CPU utilization
+            "scale_in_cooldown": 300,
+            "scale_out_cooldown": 60,
+            "predefined_metric_specification": {
+                "predefined_metric_type": "SageMakerVariantInvocationsPerInstance"
+            }
+        }
+)
+
     return create_model_step, deploy_step
