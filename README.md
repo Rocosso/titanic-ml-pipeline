@@ -27,9 +27,10 @@ titanic-ml-pipeline/
 ```
 
 next you can find the process to deploy this project to production:
+
+
 ```mermaid
 %%{init: {'theme': 'neutral', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
-
 flowchart TD
     A[Start Deployment] --> B[Prerequisites]
     B -->|AWS CLI| C[Configure AWS Credentials]
