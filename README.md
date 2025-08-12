@@ -1,6 +1,17 @@
 ### Basic Documentation
 ###
-This is the structure of this project
+## 🛠️ Technical Stack
+- **Infrastructure**: AWS CDK (Python)
+- **ML Pipeline**: SageMaker Pipelines with Processing/Training steps
+- **Serving**: SageMaker Endpoint (managed) or Custom Container (FastAPI)
+
+## ✅ Prerequisites
+- AWS Account with necessary permissions
+- AWS CLI configured
+- Docker (for custom inference image)
+
+
+## 📁 Project Structure
 ```plaintext
 titanic-ml-pipeline/
 ├── cdk/
@@ -29,6 +40,7 @@ titanic-ml-pipeline/
 next you can find the process to deploy this project to production:
 
 
+## 📁 Flowchart process
 ```mermaid
 %%{init: {'theme': 'neutral', 'fontFamily': 'Arial', 'gantt': {'barHeight': 20}}}%%
 flowchart TD
@@ -70,3 +82,62 @@ flowchart TD
     style X fill:#F44336,stroke:#D32F2F
     style AWS_Services fill:#E3F2FD,stroke:#64B5F6
 ```
+
+
+## 📁 Sequence of operations to do for use this solution
+```mermaid
+sequenceDiagram
+    participant Developer
+    participant AWS_CLI
+    participant CloudFormation
+    participant S3
+    participant SageMaker
+    participant ECR
+    participant ModelRegistry
+    participant Endpoint
+
+    %% Deployment Phase
+    Developer->>AWS_CLI: 1. cdk bootstrap
+    AWS_CLI->>CloudFormation: Initialize CDK toolkit
+    Developer->>AWS_CLI: 2. cdk deploy
+    AWS_CLI->>CloudFormation: Create/Update Stack
+    CloudFormation->>S3: Create buckets (raw/processed)
+    CloudFormation->>SageMaker: Setup IAM roles
+    CloudFormation->>ECR: Create repository
+
+    %% Data Preparation
+    Developer->>AWS_CLI: 3. Upload data (aws s3 cp)
+    AWS_CLI->>S3: Store raw dataset
+
+    %% Pipeline Execution
+    Developer->>SageMaker: 4. Start Pipeline
+    SageMaker->>S3: Read raw data
+    SageMaker->>SageMaker: Processing Job
+    SageMaker->>S3: Store processed data
+    SageMaker->>SageMaker: Training Job
+    SageMaker->>ModelRegistry: Register model v1.0
+
+    %% Deployment
+    Developer->>AWS_CLI: 5. Build/Push Docker (docker build/push)
+    AWS_CLI->>ECR: Store inference image
+    Developer->>SageMaker: 6. Deploy endpoint
+    SageMaker->>ModelRegistry: Get approved model
+    SageMaker->>ECR: Pull inference image
+    SageMaker->>Endpoint: Provision resources
+
+    %% Usage Phase
+    Endpoint-->>SageMaker: Health check
+    Developer->>Endpoint: 7. POST /predict (JSON payload)
+    Endpoint->>SageMaker: Execute model
+    SageMaker->>Endpoint: Return prediction
+    Endpoint->>Developer: Survival probability
+
+    %% Monitoring
+    loop CloudWatch
+        SageMaker->>CloudWatch: Log metrics
+    end
+
+    Note right of Developer: Deployment Complete
+```
+
+
